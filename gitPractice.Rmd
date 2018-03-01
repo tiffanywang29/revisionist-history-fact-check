@@ -1,6 +1,6 @@
 ---
-title: "Untitled"
-output: pdf_document
+title: "Hello"
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
