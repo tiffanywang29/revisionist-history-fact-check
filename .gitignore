@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+.gitignore
+stat041_p2_grp17.Rproj
