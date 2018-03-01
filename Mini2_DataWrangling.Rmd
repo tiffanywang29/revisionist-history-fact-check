@@ -1,6 +1,6 @@
 ---
 title: "Insert Title"
-author: "Insert Names"
+author: "Chase Williamson and Tiffany Wang"
 date: "Spring 2018"
 output: html_document
 urlcolor: blue
