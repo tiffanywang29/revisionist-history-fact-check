@@ -12,91 +12,23 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Mini-Project 2: Data Wrangling
 
-* I have created new groups for Mini-Project 2!
-
-* In this project, you and your partner will wrangle and possibly scrape some data to answer a question or questions of interest.  
-
-* Write in a colloquial style that is accessible to a lay reader.  Make sure to be engaging and to provide a hook in the opening paragraph.
-
-* The structure of this blog post is a bit different from the previous one.  Here you should include your R code in the output document so that you can walk the reader through how you went from question to answer. Therefore, your blog post should be part tutorial, part story telling. 
-    + [Here's an example.](http://varianceexplained.org/r/love-actually-network/)  Note, this post is about twice as long as I envision yours should be.  
-
-* Continue to take advantage of the interactive style of a blog post by including hyperlinks.  
-  
-
-* This project is about any things data wrangling.  That could be formatting, cleaning, re-structuring, and joining data.  You may also want to scrape some data (although that isn't data wrangling).
-    + Make sure you do some *non-trivial* wrangling (i.e. more than just a bunch of `mutate()`'s).
+```{r}
+library(readr)
+library(dplyr)
+library(httr)
+library(rscorecard)
+```
 
 
-* To answer your question(s), I am guessing you will have a summary table or two, possibly also a graphic. 
-
-* The focus of this post is on the process of getting from raw data to answer in a well thought-out, engaging, and clearly explained way.  
-
-    
-
-### Data
-
-* You pick the data this time but if you pick a dataset that needs a LOT of wrangling, then I would recommend changing datasets.
-
-* Don't pick a text heavy dataset (like Twitter or Facebook data) as we will learn text analysis later in the semester so those datasets would be better for your final project.
-
-* Suggestions:  
-    + Both API clients, `rscorecard` and `rnoaa`, have a rich amount of data.  I highly recommend using one of them for this assignment. 
-
-### Due Dates
-
-* **Thursday March 8th**: In-class 5 minute presentation
-    + Must have a complete version of blog post ready
-    + Use feedback given during class to make final changes
-* **Sunday March 11th**: Final draft of blog post in repo on GitHub
-    + Don't need to submit elsewhere.  I will grade it directly on GitHub.
-
-    
-        
-### Points Allocation
-
-* 10 points: Presentation
-    + Clear and engaging summary of your wrangling exercise
-* 5 points: Feedback form
-* 5 points: Engagement with other presentations
-* 20 points: RMarkdown blog post
-    + Components:
-        + Appropriate data wrangling techniques
-        + Creativity
-        + Organization
-        + Clarity (both in graphics and narrative)
-        + Grammar
-        + Crediting sources
-
-
-### Groups
-
-#### 8:30 Section
-
-1. Jonathan	Kay, Istvan	Cselotei
-2. Brent	Jacobs, Andrew	Choe
-3. Charles Levitt, Kyle	Vu, 
-4. Rajnish	Yadav, Isaac	Kleisle-Murphy
-5. Alexander	Mandel, Lillian Fornof, Kimberly Rosa-Perez
-6. Rohit	Nair, Jacky	Ye
-7. Melissa	Zavez, Jennifer	Beltran
-8. Henry	Han, Peiwen	Zhang
-
-#### 9:55 Section 
-
-11. Shirley	Cheung, Thomas Fitch
-12. Kirsten	Morehouse, Francesca	Ponziani
-13. Shivani	Gupta, Madeleine	Ward
-14. Dalia	Castro, Rachel Diamond
-15. Thomas Ferguson, Fay	Blelloch
-16. Kevin	Choi, Haochen	Wang
-17. Tiffany	Wang, Charles	Williamson
-18. Yichuan	Yan, Robert	Walsh
-
-
-* You will report in the feedback form how the work was allocated and whether or not you believe it was fair.  If at any point in the process you are having trouble with your group, please come talk to me.  
-
-**Make sure to cut all of the these instructions from your blog post.**
-
+```{r}
+my_key <- "1HADPASnygYXC2p1ZxFMAN7j2VnS9IFDdvDMKZTW"
+url <- "https://api.data.gov/ed/collegescorecard/v1/schools?"
+scrape_scorecard <- GET(url, query = list(api_key = my_key))
+dat <- sc_init() %>%
+  sc_filter(control == 2, stabbr == "PA") %>%
+  sc_select(instnm, adm_rate) %>%
+  sc_year(2015) %>%
+  sc_get() 
+```
 
 
