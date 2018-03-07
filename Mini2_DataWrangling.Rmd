@@ -34,7 +34,8 @@ dat <- sc_init() %>%
 url.food <- "https://www.bestvalueschools.com/rankings/college-dining-halls/"
 good.foods <- url.food %>%
   read_html() %>%
-  html_nodes(css = "h3")
+  html_nodes(css = "h3") %>%
+  html_text()
 ```
 
 
