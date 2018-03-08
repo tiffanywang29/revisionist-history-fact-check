@@ -18,6 +18,7 @@ library(dplyr)
 library(httr)
 library(rscorecard)
 library(rvest)
+library(tidyr)
 ```
 
 
@@ -36,6 +37,19 @@ good.foods <- url.food %>%
   read_html() %>%
   html_nodes(css = "h3") %>%
   html_text()
+good.foods <- as.data.frame(good.foods) %>%
+  filter(good.foods != "The 50 Colleges with the Best Food Ranking Methodology") %>%
+  separate(col = good.foods, into = c("rank", "school"), extra = "merge")
 ```
 
+```{r}
+my_key <- "1HADPASnygYXC2p1ZxFMAN7j2VnS9IFDdvDMKZTW"
+url <- "https://api.data.gov/ed/collegescorecard/v1/schools?"
+scrape_scorecard <- GET(url, query = list(api_key = my_key))
+sc_key(my_key)
+dat <- sc_init() %>%
+  sc_select(control, pctpell) %>%
+  sc_year(2017) %>%
+  sc_get() 
+```
 
