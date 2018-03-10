@@ -19,6 +19,7 @@ library(httr)
 library(rscorecard)
 library(rvest)
 library(tidyr)
+library(ggplot2)
 ```
 
 
@@ -26,7 +27,7 @@ library(tidyr)
 my_key <- "1HADPASnygYXC2p1ZxFMAN7j2VnS9IFDdvDMKZTW"
 url <- "https://api.data.gov/ed/collegescorecard/v1/schools?"
 scrape_scorecard <- GET(url, query = list(api_key = my_key))
-dat <- sc_init() %>%
+dat2 <- sc_init() %>%
   sc_filter(control == 2, stabbr == "PA") %>%
   sc_select(instnm, adm_rate) %>%
   sc_year(2015) %>%
@@ -43,14 +44,27 @@ good.foods <- as.data.frame(good.foods) %>%
 ```
 
 ```{r}
+#Uploaded some of the variables I thought would be interesting to look at
 my_key <- "1HADPASnygYXC2p1ZxFMAN7j2VnS9IFDdvDMKZTW"
 url <- "https://api.data.gov/ed/collegescorecard/v1/schools?"
 scrape_scorecard <- GET(url, query = list(api_key = my_key))
 sc_key(my_key)
 dat <- sc_init() %>%
-  sc_filter(control == 2, stabbr == "PA") %>%
-  sc_select(instnm, adm_rate) %>%
+  sc_select(control, pctpell, PAR_ED_PCT_1STGEN, instnm, npt4_pub, npt4_priv) %>%
   sc_year(2015) %>%
-  sc_get() 
+  sc_get()
+food_colleges <- left_join(good.foods, dat, by = c("school" = "instnm"))
+
+ggplot(colleges_food, aes(x = rank, y = pctpell, color = as.factor(control))) + geom_point()
+
+#This is me trying to separate out the rated food schools with the nonrated food schools so that we could potentially create a bar graph comparing them. The recode isn't working and I tried a ton of things and am slightly frustrated right now so I'll come back to it or if you want to give it a try that's cool too.
+colleges_food <- left_join(dat, good.foods, by = c("instnm" = "school"))
+colleges_food <- colleges_food %>%
+  mutate(rank = as.numeric(rank)) %>%
+  recode(rank, .default = "yes", .missing = "no")
+
+#But lol even without the recoding it's kind of interesting because it looks like the rated schools do seem to hang on the lower side of the pell grant/percentage of first gen students so maybe Malcolm Gladwell is onto something lol
+ggplot(colleges_food, aes(x = par_ed_pct_1stgen, y = pctpell, color = rank)) + 
+  geom_point()
 ```
 
