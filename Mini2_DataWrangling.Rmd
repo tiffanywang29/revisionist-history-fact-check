@@ -11,7 +11,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Mini-Project 2: Data Wrangling
-
 ```{r}
 library(readr)
 library(dplyr)
@@ -22,27 +21,46 @@ library(tidyr)
 library(ggplot2)
 ```
 
-
+In this R chunk we scrape food rankings.
 ```{r}
-my_key <- "1HADPASnygYXC2p1ZxFMAN7j2VnS9IFDdvDMKZTW"
-url <- "https://api.data.gov/ed/collegescorecard/v1/schools?"
-scrape_scorecard <- GET(url, query = list(api_key = my_key))
-dat2 <- sc_init() %>%
-  sc_filter(control == 2, stabbr == "PA") %>%
-  sc_select(instnm, adm_rate) %>%
-  sc_year(2015) %>%
-  sc_get() 
-
+#Assign url containing college food rankings to url.food
 url.food <- "https://www.bestvalueschools.com/rankings/college-dining-halls/"
+
+#Scrape food rankings from url
 good.foods <- url.food %>%
   read_html() %>%
   html_nodes(css = "h3") %>%
   html_text()
+
+#Convert text object that we scraped to a dataframe with two columns: rank and school name
 good.foods <- as.data.frame(good.foods) %>%
   filter(good.foods != "The 50 Colleges with the Best Food Ranking Methodology") %>%
-  separate(col = good.foods, into = c("rank", "school"), extra = "merge")
+  separate(col = good.foods, into = c("food_rank", "school"), extra = "merge")
 ```
 
+In this R chunk we scrape Forbes college rankings
+```{r}
+#Assign url containing college rankings to url.rank
+url.rank <- "https://en.wikipedia.org/wiki/Forbes_Magazine%27s_List_of_America%27s_Best_Colleges"
+
+#Scrape Forbes college rankings from wikipedia
+forbes.top25 <- url.rank %>%
+  read_html() %>%
+  html_nodes(css = "li") %>%
+  html_text() 
+
+#Remove extraneous material
+forbes.top25 <- as.data.frame(forbes.top25[c(1:25)])
+
+#Create column containing college ranks. Note: that the colleges are in ranked order, but there is not a rank variable
+forbes.top25$forbes_rank <- seq.int(nrow(forbes.top25))
+
+#Label columns
+colnames(forbes.top25) <- c("school", "forbes_rank")
+```
+
+
+In this R chunk, we import data from the college scorecard dataset
 ```{r}
 #Uploaded some of the variables I thought would be interesting to look at
 my_key <- "1HADPASnygYXC2p1ZxFMAN7j2VnS9IFDdvDMKZTW"
@@ -53,18 +71,51 @@ dat <- sc_init() %>%
   sc_select(control, pctpell, PAR_ED_PCT_1STGEN, instnm, npt4_pub, npt4_priv) %>%
   sc_year(2015) %>%
   sc_get()
-food_colleges <- left_join(good.foods, dat, by = c("school" = "instnm"))
+```
 
-ggplot(colleges_food, aes(x = rank, y = pctpell, color = as.factor(control))) + geom_point()
 
-#This is me trying to separate out the rated food schools with the nonrated food schools so that we could potentially create a bar graph comparing them. The recode isn't working and I tried a ton of things and am slightly frustrated right now so I'll come back to it or if you want to give it a try that's cool too.
+In this R chunk, we merge the three datasets.
+```{r}
+#Merge college scorecard data with food ranking data
 colleges_food <- left_join(dat, good.foods, by = c("instnm" = "school"))
-colleges_food <- colleges_food %>%
-  mutate(rank = as.numeric(rank)) %>%
-  recode(rank, .default = "yes", .missing = "no")
 
-#But lol even without the recoding it's kind of interesting because it looks like the rated schools do seem to hang on the lower side of the pell grant/percentage of first gen students so maybe Malcolm Gladwell is onto something lol
-ggplot(colleges_food, aes(x = par_ed_pct_1stgen, y = pctpell, color = rank)) + 
+#Merge college scorecard + food ranking data with college ranking data
+colleges_food_rank <- left_join(colleges_food, forbes.top25, by = c("instnm" = "school"))
+
+#Create "food_ranked" and "forbes_ranked" dummy variable indicating if the variable is labeled in that particular category
+colleges_food_rank <- colleges_food_rank %>%
+  mutate(food_rank = as.numeric(rank), forbes_rank = as.numeric(forbes_rank)) %>%
+  mutate(food_ranked = as.numeric(!is.na(food_rank)), forbes_ranked = as.numeric(!is.na(forbes_rank))) 
+
+```
+
+In this R chunk, we look at a few different visualizations
+```{r}
+#Start with Tiffany's original plot
+ggplot(colleges_food, aes(x = par_ed_pct_1stgen, y = pctpell, color = as.factor(ranked))) + 
+  geom_point()
+
+#What if we just look at school categories?
+private_food <- colleges_food
+private_food <- colleges_food %>%
+  filter(!is.na(pctpell), !is.na(par_ed_pct_1stgen)) %>%
+  group_by(control, ranked) %>%
+  summarise(mean_pctpell = mean(pctpell), mean_par_ed_pct_1stgen = mean(par_ed_pct_1stgen))
+
+ggplot(private_food, aes(x = mean_par_ed_pct_1stgen, y = mean_pctpell, color = as.factor(ranked))) + 
+  geom_point()
+
+#What if we only look at schools that are ranked in the top 25 by forbes? 
+forbes_ranked_only <- filter(colleges_food_rank, forbes_ranked==1)
+ggplot(forbes_ranked_only, aes(x = par_ed_pct_1stgen, y = pctpell, color = as.factor(food_ranked))) + 
   geom_point()
 ```
+
+In this R chunk, we show summary stats
+```{r}
+
+
+
+```
+
 
