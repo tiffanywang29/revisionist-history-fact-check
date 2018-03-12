@@ -116,6 +116,10 @@ ggplot(forbes_ranked_only, aes(x = par_ed_pct_1stgen, y = pctpell, color = as.fa
 #Does the cost of the school have to do with the quality of food?
 ggplot(colleges_food_rank, aes(x = as.character(food_ranked), y = Cost)) + 
   geom_boxplot()
+
+#But how about when we just take the "good" schools?
+ggplot(forbes_ranked_only, aes(x = as.character(food_ranked), y = Cost)) + 
+  geom_boxplot()
 ```
 
 In this R chunk, we show summary stats
