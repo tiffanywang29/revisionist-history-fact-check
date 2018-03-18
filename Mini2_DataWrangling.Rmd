@@ -61,7 +61,7 @@ url <- "https://api.data.gov/ed/collegescorecard/v1/schools?"
 scrape_scorecard <- GET(url, query = list(api_key = my_key))
 sc_key(my_key)
 dat <- sc_init() %>%
-  sc_select(control, pctpell, PAR_ED_PCT_1STGEN, instnm, npt4_pub, npt4_priv) %>%
+  sc_select(control, pctpell, PAR_ED_PCT_1STGEN, instnm, npt4_pub, npt4_priv, GRAD_DEBT_MDN) %>%
   sc_year(2015) %>%
   sc_get()
 #Combining the two variables of cost of public and private institutions 
@@ -117,12 +117,12 @@ In this R chunk, we look at a few different visualizations
 ```{r}
 #What if we just look at school categories?
 private_food <- colleges_food_rank %>%
-  filter(!is.na(pctpell), !is.na(par_ed_pct_1stgen)) %>%
+  filter(!is.na(pctpell), !is.na(grad_debt_mdn)) %>%
   group_by(control, food_ranked) %>%
   summarise(mean_pctpell = mean(pctpell), 
-            mean_par_ed_pct_1stgen = mean(par_ed_pct_1stgen))
+            mean_grad_debt_mdn = mean(grad_debt_mdn))
 
-ggplot(private_food, aes(x = mean_par_ed_pct_1stgen, y = mean_pctpell, color = as.factor(food_ranked))) + 
+ggplot(private_food, aes(x = mean_grad_debt_mdn, y = mean_pctpell, color = as.factor(food_ranked))) + 
   geom_point()
 
 #What if we only look at schools that are ranked in the top 25 by forbes? 
@@ -134,8 +134,14 @@ ggplot(forbes_ranked_only, aes(x = par_ed_pct_1stgen, y = pctpell, color = as.fa
 ggplot(colleges_food_rank, aes(x = as.character(food_ranked), y = Cost)) + 
   geom_boxplot()
 
+ggplot(colleges_food_rank, aes(x = as.character(food_ranked), y = grad_debt_mdn)) + 
+  geom_boxplot()
+
 #But how about when we just take the "good" schools?
 ggplot(forbes_ranked_only, aes(x = as.character(food_ranked), y = Cost)) + 
+  geom_boxplot()
+
+ggplot(forbes_ranked_only, aes(x = as.character(food_ranked), y = grad_debt_mdn)) + 
   geom_boxplot()
 ```
 
