@@ -12,21 +12,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Mini-Project 2: Data Wrangling
 
-We're sure many of you have heard of Malcolm Gladwell, a famous economist who has written multiple books and now hosts a podcast called Revisionist History. In its first season, Gladwell aired an episode named [Food Fight](http://revisionisthistory.com/episodes/05-food-fight), highlighting the relationship between college endowment, money spent on food services, and number of low-income students at higher education instutions by comparing Vassar to Bowdoin. He argues that while Vassar cannot offer the luxury goods like hiring a chef to design delicious meals, its commitment to admitting low income students and making their education affordable is much more important and worth the sacrifice for students who can pay full tuition.
+We're sure many of you have heard of Malcolm Gladwell, a famous pop social scientist who has written multiple books and now hosts a podcast called Revisionist History. In its first season, Gladwell aired an episode named [Food Fight](http://revisionisthistory.com/episodes/05-food-fight), highlighting the relationship between college endowment, money spent on food services, and number of low-income students at higher education instutions by comparing Vassar to Bowdoin. He argues that while Vassar cannot offer the luxury goods like hiring a chef to design delicious meals, its commitment to admitting low income students and making their education affordable is much more important and worth the sacrifice in terms of food quality.
 
-Now, we believe this is a noble cause but feel a little uneasy about Gladwell's use of two specific colleges to make a generalization for all institutions. Surely there must be other factors. And what about the quality of education? We took a list of the [50 colleges](https://www.bestvalueschools.com/rankings/college-dining-halls/) with the best food in 2017 to compare them with various school stats from the U.S. Department of Education's [College Scorecard](https://collegescorecard.ed.gov/data/documentation/) data to verify Gladwell's claim.
+While the contrast between Vassar and Bowdoin certainly provides evidence for a compelling narrative, it is important to look at the data to see if this is a trend across all institutions. Surely, it is possible to succeed on both fronts. We took a list of the [50 colleges](https://www.bestvalueschools.com/rankings/college-dining-halls/) with the best food in 2017 to compare them with various school stats from the U.S. Department of Education's [College Scorecard](https://collegescorecard.ed.gov/data/documentation/) data to verify Gladwell's claim.
 
-First, we needed to download some necessary packages for scraping data from the web and doing some data wrangling.
+We first scrape the list of 50 colleges with the best food in the country from the Best Value Schools website using the rvest package. 
 ```{r}
-library(readr)
+#Load packages
 library(dplyr)
 library(httr)
 library(rvest)
 library(tidyr)
-```
 
-Here we grabbed the list from the college food rankings from the web and converted it into a form that could be used in R.
-```{r}
+
 #Assign url containing college food rankings to url.food
 url.food <- "https://www.bestvalueschools.com/rankings/college-dining-halls/"
 
@@ -35,7 +33,11 @@ good.foods <- url.food %>%
   read_html() %>%
   html_nodes(css = "h3") %>%
   html_text()
+```
 
+Now, we have a list containing all text that was labeled as heading 3 on the webpage. We need to manipulate this dataset in two ways for it to be tidy: we must delete rows that are not true observations and we need to create one column for the name of the institution and another for the rank of the institution. We can delete the only row that does not correspond to an observation directly using the filter command from the dplyr package, and then we can use the separate command the tidyr package to create our two columns containing rank and institution name. 
+
+```{r}
 #Convert text object that we scraped to a dataframe with two columns: rank and school name
 good.foods <- as.data.frame(good.foods) %>%
   filter(good.foods != "The 50 Colleges with the Best Food Ranking Methodology") %>%
