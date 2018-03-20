@@ -16,6 +16,8 @@ We're sure many of you have heard of Malcolm Gladwell, a famous pop social scien
 
 While the contrast between Vassar and Bowdoin certainly provides evidence for a compelling narrative, it is important to look at the data to see if this is a trend across all institutions. Surely, it is possible to succeed on both fronts. We took a list of the [50 colleges](https://www.bestvalueschools.com/rankings/college-dining-halls/) with the best food in 2017 to compare them with various school stats from the U.S. Department of Education's [College Scorecard](https://collegescorecard.ed.gov/data/documentation/) data to verify Gladwell's claim.
 
+#Grabbing the Data
+
 We first scrape the list of 50 colleges with the best food in the country from the Best Value Schools website using the rvest package. 
 ```{r}
 #Load packages
@@ -47,8 +49,7 @@ good.foods <- as.data.frame(good.foods) %>%
 ```
 
 
-
-We then scrape data from the Department of Education's college scorecard website using the rscorecard package. The college scorecard database is massive, and so we have to specify the specific variables that we want to select as well as the year. The most recent year for the college scorecard is 2015; we are not concerned about food quality changing between 2015 and 2017 because food quality is likely heavily dependent on facilities and expenditure which are unlikely to change significantly over a short period of time. The key variables of interes for us are type of institution (public, private not-for-profit, or private for-profit), percent of students who receive a Pell Grant, cost of institution (there are separate variables for public and private universities), and median student debt. 
+We then scrape data from the Department of Education's college scorecard website using the rscorecard package. The college scorecard database is massive, and so we have to specify the specific variables that we want to select as well as the year. The most recent year for the college scorecard is 2015; we are not concerned about food quality changing between 2015 and 2017 because food quality is likely heavily dependent on facilities and expenditure which are unlikely to change significantly over a short period of time. The key variables of interes for us are percent of students who receive a Pell Grant and median student debt. 
 
 ```{r}
 #Downloading the package to help load the data.
@@ -69,6 +70,7 @@ dat <- sc_init() %>%
 
 
 We then want to merge our food rankings dataset with the data from the college scorecard website. We also only care about whether a school is ranked in high quality food or not rather than the numerical rank of the school. Therefore we need to create a new indicator variable for whether the school was on the Best Value Schools list or not.
+
 ```{r}
 colleges_food <- left_join(dat, good.foods, by = c("instnm" = "school"))
 colleges_food <- colleges_food %>%
@@ -76,16 +78,30 @@ colleges_food <- colleges_food %>%
   food_ranked = as.numeric(!is.na(food_rank)))
 ```
 
+#Let's Make Some Plots!
+
 Now let's compare the percent of students receiving Pell Grants and students' median debt based on whether or not the school is ranked. To do this, we need the ggplot package to create a scatterplot.
+
 ```{r}
 #Downloading ggplot to make plots.
 library(ggplot2)
 ggplot(colleges_food, aes(x = pctpell, y = log(debt_mdn), color = as.factor(food_ranked))) + 
-  geom_point(alpha = .6)
+  geom_point(alpha = .6) +
+  labs(x = "Percent of Students Receiving Pell Grants",
+       y = "Log of Median Debt",
+       color = "Food Ranked?",
+       title = "Does Food Quality Add Financial Burden?") +
+  scale_color_manual(labels = c("No", "Yes"), 
+                     values = c("#FF9A4A", "#108127")) +
+  theme_light()
 ```
-*analysis*
+
+Most of the schools with food on the Best Value Schools list have points that lie on the upper left hand of the plot, indicating that there are less students receiving Pell Grants and that they have a higher median debt. This seems to fall in line with Gladwell's claim that schools that invest more in food also invest less in offering a place to low-income students. However, there are so many more non-ranked schools that it would make sense that there's a much larger spread of debt and student receiving Pell Grants.
+
+#Comparing Similar Schools
 
 One critique that might arise when looking at the relationship between the generosity of a school's financial aid package and food quality is that schools with really good food are fundamentally "different" from schools with lower quality food. We address this possible line of criticism by looking at the top 25 ranked schools under the notion that these will be similar institutions. We gathered information from [Forbes'](https://en.wikipedia.org/wiki/Forbes_Magazine%27s_List_of_America%27s_Best_Colleges) list of "America's Best Colleges" in 2017 and then merged this new dataset to our previously existing one.
+
 ```{r}
 #Assign url containing college rankings to url.rank
 url.rank <- "https://en.wikipedia.org/wiki/Forbes_Magazine%27s_List_of_America%27s_Best_Colleges"
@@ -117,12 +133,21 @@ colleges_food_rank <- colleges_food_rank %>%
 
 ```
 
+We created a similar plot to the one we had before, but now with only the schools in Forbes' "Best Colleges" list. With less data points, it's easier to see where all the points lie.
 
 ```{r}
 colleges_food_rank_forbes <- colleges_food_rank %>%
   filter(forbes_ranked == 1)
 ggplot(colleges_food_rank_forbes, aes(x = pctpell, y = log(debt_mdn), color = as.factor(food_ranked))) + 
-  geom_point(alpha = .6)
+  geom_point(alpha = .6) +
+    labs(x = "Percent of Students Receiving Pell Grants",
+       y = "Log of Median Debt",
+       color = "Food Ranked?",
+       title = "Forbes Top 25 Schools") +
+  scale_color_manual(labels = c("No", "Yes"), 
+                     values = c("#FF9A4A", "#108127")) +
+  theme_light()
 ```
 
+This plot is much less convincing than the first one. The schools with lowest median debt for students are all schools with ranked food, and there is a smaller discrepancy when looking at percent of students receiving Pell Grants. It seems like with the best schools (at least according to Forbes), quality of food does not affect your financial aid.
 
