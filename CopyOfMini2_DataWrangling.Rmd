@@ -72,7 +72,10 @@ dat <- sc_init() %>%
 We then want to merge our food rankings dataset with the data from the college scorecard website. We also only care about whether a school is ranked in high quality food or not rather than the numerical rank of the school. Therefore we need to create a new indicator variable for whether the school was on the Best Value Schools list or not.
 
 ```{r}
+#Join college scoreboard and food rankings dataset
 colleges_food <- left_join(dat, good.foods, by = c("instnm" = "school"))
+
+#Change food ranking into a numerical variable and create an indicator variable for if the school is ranked
 colleges_food <- colleges_food %>%
   mutate(food_rank = as.numeric(food_rank), 
   food_ranked = as.numeric(!is.na(food_rank)))
@@ -83,8 +86,10 @@ colleges_food <- colleges_food %>%
 Now let's compare the percent of students receiving Pell Grants and students' median debt based on whether or not the school is ranked. To do this, we need the ggplot package to create a scatterplot.
 
 ```{r}
-#Downloading ggplot to make plots.
+#Downloading ggplot 
 library(ggplot2)
+
+#Create a scatterplot of median debt against percent of students receiving pell grants
 ggplot(colleges_food, aes(x = pctpell, y = log(debt_mdn), color = as.factor(food_ranked))) + 
   geom_point(alpha = .6) +
   labs(x = "Percent of Students Receiving Pell Grants",
@@ -136,8 +141,11 @@ colleges_food_rank <- colleges_food_rank %>%
 We created a similar plot to the one we had before, but now with only the schools in Forbes' "Best Colleges" list. With less data points, it's easier to see where all the points lie.
 
 ```{r}
+#Look at the subset of colleges on the forbes list
 colleges_food_rank_forbes <- colleges_food_rank %>%
   filter(forbes_ranked == 1)
+
+#Create a scatterplot of median debt against percent of students receiving pell grants
 ggplot(colleges_food_rank_forbes, aes(x = pctpell, y = log(debt_mdn), color = as.factor(food_ranked))) + 
   geom_point(alpha = .6) +
     labs(x = "Percent of Students Receiving Pell Grants",
