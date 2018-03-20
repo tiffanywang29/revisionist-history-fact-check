@@ -145,11 +145,5 @@ ggplot(forbes_ranked_only, aes(x = as.character(food_ranked), y = debt_mdn)) +
   geom_boxplot()
 ```
 
-In this R chunk, we show summary stats
-```{r}
-
-
-
-```
 
 

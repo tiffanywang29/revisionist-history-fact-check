@@ -46,40 +46,41 @@ good.foods <- as.data.frame(good.foods) %>%
            extra = "merge")
 ```
 
-Now we downloaded the information from the College Scorecard. They have A LOT of data, so we chose a few specific variables to analyze: 
--ownership of institution (public, private nonprofit, private for-profit)
--percent of students who receive a Pell Grant
--percent of first generation students
--cost of institution (separate variables for public and private)
-There was only data available up to 2015, so we grabbed that, assuming that the food didn't change drastically between then and now.
+
+
+We then scrape data from the Department of Education's college scorecard website using the rscorecard package. The college scorecard database is massive, and so we have to specify the specific variables that we want to select as well as the year. The most recent year for the college scorecard is 2015; we are not concerned about food quality changing between 2015 and 2017 because food quality is likely heavily dependent on facilities and expenditure which are unlikely to change significantly over a short period of time. The key variables of interes for us are type of institution (public, private not-for-profit, or private for-profit), percent of students who receive a Pell Grant, percent of first generation students, and cost of institution (there are separate variables for public and private universities). 
+
 ```{r}
 #Downloading the package to help load the data.
 library(rscorecard)
+
 #We have to use a key so that the government knows who's using their data
 my_key <- "1HADPASnygYXC2p1ZxFMAN7j2VnS9IFDdvDMKZTW"
+
+#Scrape data from college scorecard website
 url <- "https://api.data.gov/ed/collegescorecard/v1/schools?"
 scrape_scorecard <- GET(url, query = list(api_key = my_key))
 sc_key(my_key)
 dat <- sc_init() %>%
-  sc_select(control, pctpell, PAR_ED_PCT_1STGEN, instnm, npt4_pub, npt4_priv) %>%
+<<<<<<< HEAD
+  sc_select(control, pctpell, PAR_ED_PCT_1STGEN, instnm, npt4_pub, npt4_priv, DEBT_MDN) %>%
+=======
+  sc_select(control, pctpell, PAR_ED_PCT_1STGEN, instnm, npt4_pub, npt4_priv, GRAD_DEBT_MDN) %>%
+>>>>>>> bc1339b37c6f1650c69d226de90bd7b78755c11c
   sc_year(2015) %>%
   sc_get()
+
 #Combining the two variables of cost of public and private institutions 
 dat <-  gather(dat, npt4_pub, npt4_priv, key = "Type of School", value = "Cost")
 ```
 
-Now we merged the two datasets so that we can visually compare the different variables regarding money with the quality of food.
+
+We then want to merge our food rankings dataset with the data from the college scorecard website.
 ```{r}
 colleges_food <- left_join(dat, good.foods, by = c("instnm" = "school"))
-
-#Downloading ggplot to make plots.
-library(ggplot2)
-ggplot(colleges_food, aes(x = pctpell, y = Cost, color = as.factor(food_rank))) + 
-  geom_point(alpha = .6)
 ```
-~Some analysis~
 
-Obviously, cost, and definitely not food ranking, is not the only factor that goes into your choice of college. We also wanted to look at the school ranking to see if this phenomenon is apparent with top-ranked schools. We gathered information from [Forbes'](https://en.wikipedia.org/wiki/Forbes_Magazine%27s_List_of_America%27s_Best_Colleges) list of "America's Best Colleges" in 2017 and then merged this new dataset to our previously existing one.
+One critique that might arise when looking at the relationship between the generosity of a school's financial aid package and food quality is that schools with really good food are fundamentally "different"from schools with lower quality food. We address this possible line of criticism by looking at the top 25 ranked schools under the notion that these will be similar institutions. We gathered information from [Forbes'](https://en.wikipedia.org/wiki/Forbes_Magazine%27s_List_of_America%27s_Best_Colleges) list of "America's Best Colleges" in 2017 and then merged this new dataset to our previously existing one.
 ```{r}
 #Assign url containing college rankings to url.rank
 url.rank <- "https://en.wikipedia.org/wiki/Forbes_Magazine%27s_List_of_America%27s_Best_Colleges"
@@ -115,14 +116,19 @@ colleges_food_rank <- colleges_food_rank %>%
 
 In this R chunk, we look at a few different visualizations
 ```{r}
+#Downloading ggplot to make plots.
+library(ggplot2)
+ggplot(colleges_food_rank, aes(x = pctpell, y = log(debt_mdn), color = as.factor(food_ranked))) + 
+  geom_point(alpha = .6)
+
 #What if we just look at school categories?
 private_food <- colleges_food_rank %>%
-  filter(!is.na(pctpell), !is.na(par_ed_pct_1stgen)) %>%
+  filter(!is.na(pctpell), !is.na(grad_debt_mdn)) %>%
   group_by(control, food_ranked) %>%
   summarise(mean_pctpell = mean(pctpell), 
-            mean_par_ed_pct_1stgen = mean(par_ed_pct_1stgen))
+            mean_grad_debt_mdn = mean(grad_debt_mdn))
 
-ggplot(private_food, aes(x = mean_par_ed_pct_1stgen, y = mean_pctpell, color = as.factor(food_ranked))) + 
+ggplot(private_food, aes(x = mean_grad_debt_mdn, y = mean_pctpell, color = as.factor(food_ranked))) + 
   geom_point()
 
 #What if we only look at schools that are ranked in the top 25 by forbes? 
@@ -134,8 +140,19 @@ ggplot(forbes_ranked_only, aes(x = par_ed_pct_1stgen, y = pctpell, color = as.fa
 ggplot(colleges_food_rank, aes(x = as.character(food_ranked), y = Cost)) + 
   geom_boxplot()
 
+ggplot(colleges_food_rank, aes(x = as.character(food_ranked), y = grad_debt_mdn)) + 
+  geom_boxplot()
+
 #But how about when we just take the "good" schools?
 ggplot(forbes_ranked_only, aes(x = as.character(food_ranked), y = Cost)) + 
+  geom_boxplot()
+
+<<<<<<< HEAD
+#But how about when we just take the "good" schools?
+ggplot(forbes_ranked_only, aes(x = as.character(food_ranked), y = debt_mdn)) + 
+=======
+ggplot(forbes_ranked_only, aes(x = as.character(food_ranked), y = grad_debt_mdn)) + 
+>>>>>>> bc1339b37c6f1650c69d226de90bd7b78755c11c
   geom_boxplot()
 ```
 
