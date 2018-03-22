@@ -89,9 +89,14 @@ Now let's compare the percent of students receiving Pell Grants and students' me
 #Downloading ggplot 
 library(ggplot2)
 
+#Create dataset of ranked schools
+food_ranked_ds <- colleges_food %>%
+  filter(food_ranked==1)
 #Create a scatterplot of median debt against percent of students receiving pell grants
 ggplot(colleges_food, aes(x = pctpell, y = log(debt_mdn), color = as.factor(food_ranked))) + 
   geom_point(alpha = .6) +
+  geom_point(data = food_ranked_ds, mapping = aes(x = pctpell, y = log(debt_mdn)), color = "#108127",
+ alpha = 0.6) +
   labs(x = "Proportion of Students Receiving Pell Grants",
        y = "Log of Median Debt",
        color = "Food Ranked?",
