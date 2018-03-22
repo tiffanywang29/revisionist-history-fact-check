@@ -12,13 +12,13 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ## Mini-Project 2: Data Wrangling
 
-We're sure many of you have heard of Malcolm Gladwell, a famous pop social scientist who has written multiple books and now hosts a podcast called Revisionist History. In its first season, Gladwell aired an episode named [Food Fight](http://revisionisthistory.com/episodes/05-food-fight), highlighting the relationship between college endowment, money spent on food services, and number of low-income students at higher education instutions by comparing Vassar to Bowdoin. He argues that while Vassar cannot offer the luxury goods like hiring a chef to design delicious meals, its commitment to admitting low income students and making their education affordable is much more important and worth the sacrifice in terms of food quality.
+We're sure many of you have heard of Malcolm Gladwell, a famous pop social scientist who has written multiple books and now hosts a podcast called Revisionist History. In its first season, Gladwell aired an episode named [Food Fight](http://revisionisthistory.com/episodes/05-food-fight), highlighting the relationship between college endowment, money spent on food services, and number of low-income students at higher education instutions by comparing Vassar to Bowdoin. He argues that while Vassar cannot offer the luxury goods like hiring a chef to design delicious meals, its commitment to admitting low income students and making their education affordable is much more important and worth the sacrifice in terms of food quality. Gladwell, however, took this argument a step further by arguing that there is a greater tension at all colleges between "luxurious" amenities and inclusivity. 
 
-While the contrast between Vassar and Bowdoin certainly provides evidence for a compelling narrative, it is important to look at the data to see if this is a trend across all institutions. Surely, it is possible to succeed on both fronts. We took a list of the [50 colleges](https://www.bestvalueschools.com/rankings/college-dining-halls/) with the best food in 2017 to compare them with various school stats from the U.S. Department of Education's [College Scorecard](https://collegescorecard.ed.gov/data/documentation/) data to verify Gladwell's claim.
+The contrast between Vassar and Bowdoin certainly provides evidence for the aforementioned trade-off, but it is important to look at the data to see if this truly is a trade-off. Surely, there are a number of schools that find ways to succeed on both fronts. We took a list of the [50 colleges](https://www.bestvalueschools.com/rankings/college-dining-halls/) with the best food in the country and compared them using various university statistics from the U.S. Department of Education's [College Scorecard](https://collegescorecard.ed.gov/data/documentation/) data to verify Gladwell's claim. We then augment this analysis by looking only at elite colleges as measured by Forbes' college ranking list.
 
 #Grabbing the Data
 
-We first scrape the list of 50 colleges with the best food in the country from the Best Value Schools website using the rvest package. 
+We begin by scraping the list of 50 colleges with the best food in the country in 2017 from the Best Value Schools website using the rvest package. The Best Value Schools webpage presents these rankings as a single block of text rather than a table. For each college on the list, the name of the university and the ranking appears as a heading with a brief text blurb underneath. Even though the rankings are not organized as a list, we can exploit the fact that all of the rankings appear as a header to extract this data from the webpage. We scrape this data by pulling all text labeled as heading 3 from the webpage.
 ```{r}
 #Load packages
 library(dplyr)
@@ -37,7 +37,7 @@ good.foods <- url.food %>%
   html_text()
 ```
 
-Now, we have a list containing all text that was labeled as heading 3 on the webpage. We need to manipulate this dataset in two ways for it to be tidy: we must delete rows that are not true observations and we need to create one column for the name of the institution and another for the rank of the institution. We can delete the only row that does not correspond to an observation directly using the filter command from the dplyr package, and then we can use the separate command the tidyr package to create our two columns containing rank and institution name. 
+We now have a list containing all text that was labeled as heading 3 on the webpage. We need to manipulate this dataset in two ways for it to be tidy: we must delete rows that are not true observations and we need to create one column for the name of the institution and another for the rank of the institution. We can delete the only row that does not correspond to an observation directly using the filter command from the dplyr package, and then we can use the separate command the tidyr package to create our two columns containing rank and institution name. 
 
 ```{r}
 #Convert text object that we scraped to a dataframe with two columns: rank and school name
@@ -49,7 +49,7 @@ good.foods <- as.data.frame(good.foods) %>%
 ```
 
 
-We then scrape data from the Department of Education's college scorecard website using the rscorecard package. The college scorecard database is massive, and so we have to specify the specific variables that we want to select as well as the year. The most recent year for the college scorecard is 2015; we are not concerned about food quality changing between 2015 and 2017 because food quality is likely heavily dependent on facilities and expenditure which are unlikely to change significantly over a short period of time. The key variables of interes for us are percent of students who receive a Pell Grant and median student debt. 
+We then use the Department of Education's College Scorecard API to extract relevant data. The college scorecard database is massive, and so we have to specify the specific variables that we want to select as well as the year. The most recent year for the college scorecard is 2015; we are not concerned about food quality changing between 2015 and 2017 because food quality is likely heavily dependent on facilities and expenditure which are unlikely to change significantly over a short period of time. The key variables of interes for us are percent of students who receive a Pell Grant and median student debt. 
 
 ```{r}
 #Downloading the package to help load the data.
@@ -69,7 +69,7 @@ dat <- sc_init() %>%
 ```
 
 
-We then want to merge our food rankings dataset with the data from the college scorecard website. We also only care about whether a school is ranked in high quality food or not rather than the numerical rank of the school. Therefore we need to create a new indicator variable for whether the school was on the Best Value Schools list or not.
+We then want to merge our food rankings dataset with the data from the college scorecard website. Since there are thousands of colleges in the College Scorecard dataset, we focus on whether a college appears on the list of 50 at all rather than where it ranks among the top 50. The rationale for this is that there is a lot more variation between the schools that make the best food list and those that do not than there is between schools that are on the best food list. We create an indicator variable called "food_ranked" that allows us to analyze differences between the ranked and non-ranked schools. 
 
 ```{r}
 #Join college scoreboard and food rankings dataset
@@ -81,9 +81,9 @@ colleges_food <- colleges_food %>%
   food_ranked = as.numeric(!is.na(food_rank)))
 ```
 
-#Let's Make Some Plots!
+#Let's Plot Our Data!
 
-Now let's compare the percent of students receiving Pell Grants and students' median debt based on whether or not the school is ranked. To do this, we need the ggplot package to create a scatterplot.
+Now let's compare the percent of students receiving Pell Grants and students' median debt based on whether or not the school is ranked. To do this, we will use the ggplot package to create a scatterplot of median debt against the percent of students receiving pell grants. Because the median debt variable is skewed, we use the natural log of median debt. The points for schools that appear on the food ranked list are in green while the points that do not appear on the food rankings list are in yellow.
 
 ```{r}
 #Downloading ggplot 
@@ -92,20 +92,20 @@ library(ggplot2)
 #Create a scatterplot of median debt against percent of students receiving pell grants
 ggplot(colleges_food, aes(x = pctpell, y = log(debt_mdn), color = as.factor(food_ranked))) + 
   geom_point(alpha = .6) +
-  labs(x = "Percent of Students Receiving Pell Grants",
+  labs(x = "Proportion of Students Receiving Pell Grants",
        y = "Log of Median Debt",
        color = "Food Ranked?",
        title = "Does Food Quality Add Financial Burden?") +
   scale_color_manual(labels = c("No", "Yes"), 
                      values = c("#FF9A4A", "#108127")) +
-  theme_light()
+  theme_light() 
 ```
 
-Most of the schools with food on the Best Value Schools list have points that lie on the upper left hand of the plot, indicating that there are less students receiving Pell Grants and that they have a higher median debt. This seems to fall in line with Gladwell's claim that schools that invest more in food also invest less in offering a place to low-income students. However, there are so many more non-ranked schools that it would make sense that there's a much larger spread of debt and student receiving Pell Grants.
+Most of the points for schools that appear on the Best Value Schools list are located in the upper left hand of the plot, indicating that there are less students receiving Pell Grants and that they have a higher median debt. This seems to fall in line with Gladwell's claim that schools that invest more in food also invest less in offering a place to low-income students. However, there are so many more non-ranked schools that it would make sense that there's a much larger spread of debt and student receiving Pell Grants.
 
 #Comparing Similar Schools
 
-One critique that might arise when looking at the relationship between the generosity of a school's financial aid package and food quality is that schools with really good food are fundamentally "different" from schools with lower quality food. We address this possible line of criticism by looking at the top 25 ranked schools under the notion that these will be similar institutions. We gathered information from [Forbes'](https://en.wikipedia.org/wiki/Forbes_Magazine%27s_List_of_America%27s_Best_Colleges) list of "America's Best Colleges" in 2017 and then merged this new dataset to our previously existing one.
+One critique that might arise when looking at the relationship between the generosity of a school's financial aid package and food quality is that schools with really good food are fundamentally "different" from schools with lower quality food. We address this possible line of criticism by looking at a subsample of our data for which we expect the schools to be more similar. Specifically, we limit our sample to the top 25 schools on Forbes' "America's Best Colleges" list. Since this ranking is based off of different measures of quality, we expect that  schools ranked highly on this list will be fairly similar institutions. We scraped the data from [Forbes'](https://en.wikipedia.org/wiki/Forbes_Magazine%27s_List_of_America%27s_Best_Colleges) list of "America's Best Colleges" in 2017 and then merged this new dataset to our previously existing one. We used the same data wrangling process for the Forbes' ranking data as we did for the food ranking data. 
 
 ```{r}
 #Assign url containing college rankings to url.rank
@@ -126,6 +126,9 @@ forbes.top25$forbes_rank <- seq.int(nrow(forbes.top25))
 #Label columns
 colnames(forbes.top25) <- c("school", "forbes_rank")
 
+#Rename Columbia
+colleges_food$instnm[colleges_food$instnm=="Columbia University in the City of New York"] <- "Columbia University" 
+
 #Merge college scorecard + food ranking data with college ranking data
 colleges_food_rank <- left_join(colleges_food, 
                                 forbes.top25, 
@@ -138,7 +141,9 @@ colleges_food_rank <- colleges_food_rank %>%
 
 ```
 
-We created a similar plot to the one we had before, but now with only the schools in Forbes' "Best Colleges" list. With less data points, it's easier to see where all the points lie.
+There are a couple of differences between the web scraping done for the Forbes' data and for the food rankings data that are worth noting. The first is that we had to rename Columbia University for it to be consistent between datasets. The second is that we have to create a column where we have the ranking of the institutions. Since the institutions are ordered from 1 to 25, we can simply assign the observation number to the rank column. We would not be able to do this if the universities were not ordered sequentially. We should also note that the United States Military and Naval academies appear in the top 25 list for Forbes', but do not appear in the College Scoreccard database. 
+
+The next step is to compare the schools that appear on the food rankings list to those that do not among our subsample. We do this by creating a scatterplot identical to the one we created earlier, but this time we only include institutions that appear on the Forbes list.
 
 ```{r}
 #Look at the subset of colleges on the forbes list
@@ -148,14 +153,16 @@ colleges_food_rank_forbes <- colleges_food_rank %>%
 #Create a scatterplot of median debt against percent of students receiving pell grants
 ggplot(colleges_food_rank_forbes, aes(x = pctpell, y = log(debt_mdn), color = as.factor(food_ranked))) + 
   geom_point(alpha = .6) +
-    labs(x = "Percent of Students Receiving Pell Grants",
+    labs(x = "Proportion of Students Receiving Pell Grants",
        y = "Log of Median Debt",
        color = "Food Ranked?",
        title = "Forbes Top 25 Schools") +
   scale_color_manual(labels = c("No", "Yes"), 
                      values = c("#FF9A4A", "#108127")) +
-  theme_light()
+  theme_light() +
+  theme(legend.position = c(.85,.85), legend.box.background = element_rect()) 
+
 ```
 
-This plot is much less convincing than the first one. The schools with lowest median debt for students are all schools with ranked food, and there is a smaller discrepancy when looking at percent of students receiving Pell Grants. It seems like with the best schools (at least according to Forbes), quality of food does not affect your financial aid.
+This plot is much less convincing than the first one we showed. In fact, there does not seem to be any distinguishable pattern between schools that appear on the food ranking list and those that do not. Among the best schools (at least according to Forbes), quality of food does not affect your financial aid. There are a number of explanations for this. One possible explanation of this results is that we are exclusively looking at schools with large endowments, and thus they are less likely to face financial trade-offs. Future analysis could look into other ways of "matching" similar schools and see if there is any relationship between quality of dining services and generosity of financial aid.
 
