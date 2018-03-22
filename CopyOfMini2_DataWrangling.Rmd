@@ -83,7 +83,7 @@ colleges_food <- colleges_food %>%
 
 #Let's Plot Our Data!
 
-Now let's compare the percent of students receiving Pell Grants and students' median debt based on whether or not the school is ranked. To do this, we will use the ggplot package to create a scatterplot of median debt against the percent of students receiving pell grants. Because the median debt variable is skewed, we use the natural log of median debt. The points for schools that appear on the food ranked list are in green while the points that do not appear on the food rankings list are in yellow.
+Now let's compare the percent of students receiving Pell Grants and students' median debt based on whether or not the school is ranked. To do this, we will use the ggplot package to create a scatterplot of median debt against the percent of students receiving pell grants. Because the median debt variable is skewed, we use the natural log of median debt. The points for schools that appear on the food ranked list are in green while the points that do not appear on the food rankings list are in orange.
 
 ```{r}
 #Downloading ggplot 
@@ -141,7 +141,7 @@ colleges_food_rank <- colleges_food_rank %>%
 
 ```
 
-There are a couple of differences between the web scraping done for the Forbes' data and for the food rankings data that are worth noting. The first is that we had to rename Columbia University for it to be consistent between datasets. The second is that we have to create a column where we have the ranking of the institutions. Since the institutions are ordered from 1 to 25, we can simply assign the observation number to the rank column. We would not be able to do this if the universities were not ordered sequentially. We should also note that the United States Military and Naval academies appear in the top 25 list for Forbes', but do not appear in the College Scoreccard database. 
+There are a couple of differences between the web scraping done for the Forbes' data and for the food rankings data that are worth noting. The first is that we had to rename Columbia University for it to be consistent between datasets. The second is that we have to create a column where we have the ranking of the institutions. Since the institutions are ordered from 1 to 25, we can simply assign the observation number to the rank column. We would not be able to do this if the universities were not ordered sequentially. We should also note that the United States Military and Naval academies appear in the top 25 list for Forbes', but do not appear in the College Scorecard database. 
 
 The next step is to compare the schools that appear on the food rankings list to those that do not among our subsample. We do this by creating a scatterplot identical to the one we created earlier, but this time we only include institutions that appear on the Forbes list.
 
@@ -164,5 +164,5 @@ ggplot(colleges_food_rank_forbes, aes(x = pctpell, y = log(debt_mdn), color = as
 
 ```
 
-This plot is much less convincing than the first one we showed. In fact, there does not seem to be any distinguishable pattern between schools that appear on the food ranking list and those that do not. Among the best schools (at least according to Forbes), quality of food does not affect your financial aid. There are a number of explanations for this. One possible explanation of this results is that we are exclusively looking at schools with large endowments, and thus they are less likely to face financial trade-offs. Future analysis could look into other ways of "matching" similar schools and see if there is any relationship between quality of dining services and generosity of financial aid.
+This plot is much less convincing than the first one we showed. In fact, there does not seem to be any distinguishable pattern between schools that appear on the food ranking list and those that do not. Among the best schools (at least according to Forbes), quality of food does not affect your financial aid. There are a number of explanations for this. One possible explanation of this results is that we are exclusively looking at schools with large endowments, and thus they are less likely to face financial trade-offs. Future analysis could look into other ways of "matching" similar schools and see if there is any relationship between quality of dining services and generosity of financial aid. However, for the time being, it seems that at least people choosing among the top schools can be a little picky about their school cafeterias without worrying about their consciences.
 
